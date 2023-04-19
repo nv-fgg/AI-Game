@@ -24,6 +24,7 @@ import { Chat } from "./chat";
 import dynamic from "next/dynamic";
 import { REPO_URL } from "../constant";
 import { ErrorBoundary } from "./error";
+import { FALSE } from "sass";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -140,7 +141,7 @@ function _Home() {
   );
   const chatStore = useChatStore();
   const loading = !useHasHydrated();
-  const [showSideBar, setShowSideBar] = useState(true);
+  const [showSideBar, setShowSideBar] = useState(false);
 
   // setting
   const [openSettings, setOpenSettings] = useState(false);
@@ -154,7 +155,6 @@ function _Home() {
   if (loading) {
     return <Loading />;
   }
-
   return (
     <div
       className={`${
@@ -234,13 +234,13 @@ function _Home() {
           <Settings
             closeSettings={() => {
               setOpenSettings(false);
-              setShowSideBar(true);
+              setShowSideBar(false);
             }}
           />
         ) : (
           <Chat
             key="chat"
-            showSideBar={() => setShowSideBar(true)}
+            showSideBar={() => setShowSideBar(false)}
             sideBarShowing={showSideBar}
           />
         )}
