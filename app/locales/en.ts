@@ -6,8 +6,10 @@ const en: LocaleType = {
   Error: {
     Unauthorized:
       "Unauthorized access, please enter access code in settings page." +
-      "KEY is " +
+      "Your OpenAI KEY is currently set to" +
       process.env.OPENAI_API_KEY,
+    /* console:("Your OpenAI KEY is currently set to" +
+      process.env.OPENAI_API_KEY),*/
   },
   ChatItem: {
     ChatItemCount: (count: number) => `${count} messages`,
