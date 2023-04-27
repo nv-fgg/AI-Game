@@ -24,7 +24,9 @@ import { Chat } from "./chat";
 import dynamic from "next/dynamic";
 import { REPO_URL } from "../constant";
 import { ErrorBoundary } from "./error";
-import { FALSE } from "sass";
+
+// Establish firsttimeonly variable
+// export const firsttimeonly: boolean = true;
 
 export function Loading(props: { noLogo?: boolean }) {
   return (

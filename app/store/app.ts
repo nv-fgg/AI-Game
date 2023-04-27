@@ -11,6 +11,7 @@ import { isMobileScreen, trimTopic } from "../utils";
 
 import Locale from "../locales";
 import { showToast } from "../components/ui-lib";
+//import { firsttimeonly } from '../components/home';
 
 export type Message = ChatCompletionResponseMessage & {
   date: string;
@@ -18,6 +19,38 @@ export type Message = ChatCompletionResponseMessage & {
   isError?: boolean;
   id?: number;
 };
+
+/*
+The following are the initial prompts for the game by NV
+*/
+
+// let firsttimeonly = true;
+
+const initialSystemPrompt: Message = {
+  id: Date.now(),
+  date: new Date().toLocaleString(),
+  role: "system",
+  content:
+    "You are now the game master for a turn based game. Every turn has 3 wacky options. Each player turn should result in unpredictable consequences.",
+};
+
+const initialUserPrompt: Message = {
+  id: Date.now() + 1,
+  date: new Date().toLocaleString(),
+  role: "user",
+  content:
+    "Run a game where the player goal is to get off the planet KuKiPie in Spark Galaxy. The player should only have 5 turns before it's game over. Indicate which turn they're on each time they make a move. The first scenario is You land on the planet, and you see a huge pink fuzzball alien in the distance, it's singing a loud song.",
+};
+
+const initialAssistantPrompt: Message = {
+  id: Date.now() + 1,
+  date: new Date().toLocaleString(),
+  role: "assistant",
+  content:
+    "Turn 1 of 5 \n You wave at the huge fuzzball, and make a big goofy smile, and look closely. It has a nice pink sweater, and a less pink face, and is eating something big and juicy. You wonder if he can help you get off the planet. \n1. Run over and see if the fuzzball speaks English. \n2. Yell hello at the fuzzball from here. \n3. Run to another part of the planet.",
+};
+
+/* End initial prompts by NV */
 
 export function createMessage(override: Partial<Message>): Message {
   return {
@@ -178,15 +211,20 @@ export const BOT_HELLO: Message = createMessage({
   content: Locale.Store.BotHello,
 });
 
+/* Start initial prompts by NV */
+
 function createEmptySession(): ChatSession {
   const createDate = new Date().toLocaleString();
 
   return {
     id: Date.now(),
-    topic: DEFAULT_TOPIC,
+    topic: "AI Adventure Game",
+    // topic: DEFAULT_TOPIC,
     sendMemory: true,
     memoryPrompt: "",
-    context: [],
+    // NV update the context messages
+    context: [initialSystemPrompt, initialUserPrompt, initialAssistantPrompt],
+    // context: [],
     messages: [],
     stat: {
       tokenCount: 0,
@@ -469,7 +507,9 @@ export const useChatStore = create<ChatStore>()(
           session.memoryPrompt.length > 0
         ) {
           const memoryPrompt = get().getMemoryPrompt();
+          // NV
           context.push(memoryPrompt);
+          // context.unshift(memoryPrompt);
         }
 
         // get short term and unmemoried long term memory
@@ -497,8 +537,29 @@ export const useChatStore = create<ChatStore>()(
           reversedRecentMessages.push(msg);
         }
 
-        // concat
+        /* NV adding first prompts */
+        // const initMessages : ([initialSystemPrompt, initialUserPrompt, initialAssistantPrompt]);
+
+        /*const isNotMemoryPrompt = !(session.memoryPrompt && session.memoryPrompt.length > 0);
+
+        const recentMessages = isNotMemoryPrompt
+          ? [initialSystemPrompt, initialUserPrompt, initialAssistantPrompt].concat(context).concat(reversedRecentMessages.reverse())
+          : context.concat(reversedRecentMessages.reverse()); */
+
+        // DEBUG - always start with initial messages ONLY. Don't concat the previous session's messages.
+        // TODO: Is this resetting recent messages to these three every single time we call this function?
+
+        // if (firsttimeonly == true) {
+        // const initMessages = ([initialSystemPrompt, initialUserPrompt, initialAssistantPrompt]);
+        //   firsttimeonly = false;
+        // }
+        // concat ORIGINAL
+        // context.reverse();
         const recentMessages = context.concat(reversedRecentMessages.reverse());
+        console.log(recentMessages);
+
+        // REAL version concats
+        //const recentMessages = (n === 0 ? [initialSystemPrompt, initialUserPrompt, initialAssistantPrompt] : []).concat(context).concat(reversedRecentMessages.reverse());
 
         return recentMessages;
       },
@@ -515,10 +576,24 @@ export const useChatStore = create<ChatStore>()(
         set(() => ({ sessions }));
       },
 
+      // NV updates as this function often has the problems on reset.
       resetSession() {
         get().updateCurrentSession((session) => {
           session.messages = [];
           session.memoryPrompt = "";
+          // NV adding initial prompts
+          session.context = [
+            initialSystemPrompt,
+            initialUserPrompt,
+            initialAssistantPrompt,
+          ];
+          session.topic = "AI Adventure Game";
+          session.stat = {
+            tokenCount: 0,
+            wordCount: 0,
+            charCount: 0,
+          };
+          session.lastSummarizeIndex = 0;
         });
       },
 
